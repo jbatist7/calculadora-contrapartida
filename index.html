@@ -59,10 +59,11 @@
             font-size: 0.9em;
         }
         
+        /* CORREÇÃO DE SOBREPOSIÇÃO: Garante o espaçamento entre o rótulo e a instrução */
         .instrucao {
             font-size: 0.8em; 
             color: #555; 
-            margin-top: -10px;
+            margin-top: 5px; /* Adiciona espaço acima */
             margin-bottom: 10px;
         }
 
@@ -179,12 +180,12 @@
     <div class="secao">
         <h2>1. Definição da Proposta</h2>
 
-        <label for="valorTotalProjeto">Valor total do Projeto (conforme orçamento):</label>
+        <label for="valorTotalProjeto">Valor total do Projeto (conforme orçamento e valor não financeiro, como contrapartida).:</label>
         <p class="instrucao">(Não coloque ponto separando os números. Use a vírgula para centavos)</p>
         <input type="number" id="valorTotalProjeto" placeholder="Ex: 1000,00" value="1000.00" oninput="calcular(true)" step="0.01">
 
-        <label for="contrapartidaEscolha">Percentual da contrapartida exigida no Edital:</label>
-        <p class="instrucao">(O Edital prevê um percentual mínimo, porém, a depender da conveniência, esse percentual pode ser maior.)</p>
+        <label for="contrapartidaEscolha">Percentual da contrapartida:</label>
+        <p class="instrucao">(O Edital prevê um percentual mínimo de contrapartida, porém, a depender da conveniência, esse percentual pode ser maior.)</p>
         
         <div class="input-group">
             <input type="number" id="contrapartidaEscolha" placeholder="Ex: 10.00" value="10.00" oninput="calcular(false)" step="0.01">
@@ -221,7 +222,7 @@
 <script>
     function formatarMoeda(valor) {
         if (isNaN(valor) || !isFinite(valor)) return 'Inválido';
-        // Remove o símbolo R$ para uso interno em resultados combinados, mas mantém a formatação brasileira
+        // Usa a formatação brasileira (vírgula para decimal), sem o símbolo R$ no retorno.
         return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     
@@ -253,13 +254,15 @@
 
         // --- 2. Lógica de Edição (Permitir Apagar sem Erro) ---
 
-        // Verifica se a ÂNCORA e a CONTRAPARTIDA são válidas
+        // Verifica se a ÂNCORA e a CONTRAPARTIDA são válidas para iniciar o cálculo
         if (isNaN(valorTotalProjeto) || valorTotalProjeto <= 0 || isNaN(contrapartidaEscolha) || contrapartidaEscolhaInput.value.trim() === '') {
             mensagemErro.style.display = 'none';
             btnWhatsapp.disabled = true;
             document.getElementById('saidaTotalFinal').textContent = 'R$ 0,00';
             document.getElementById('saidaSolicitadoCompleta').textContent = 'Aguardando digitação...';
             document.getElementById('saidaContrapartidaCompleta').textContent = 'Aguardando digitação...';
+            
+            // Retorna aqui para permitir que o técnico digite livremente sem resetar o campo.
             return; 
         }
 
