@@ -180,7 +180,7 @@
     <div class="secao">
         <h2>1. Definição do Valor Total (Âncora)</h2>
 
-        <label for="valorBaseSolicitado">Valor Base Solicitado (R$):</label>
+        <label for="valorBaseSolicitado">Valor Base Solicitado (R$) - (não coloque ponto):</label>
         <input type="number" id="valorBaseSolicitado" placeholder="Ex: 100,00" value="100.00" oninput="calcular(true)" step="0.01">
 
         <label for="percentualFinanciamentoRegra">Percentual Máximo de Financiamento (Regra do Edital, %):</label>
@@ -213,13 +213,13 @@
     <div class="secao">
         <h2>3. Resultado Final da Proposta</h2>
 
-        <label>Novo Valor Solicitado (R$):</label>
+        <label>Valor Solicitado (R$):</label>
         <div id="saidaNovoSolicitado" class="resultado">Aguardando...</div>
         
-        <label>Novo Valor da Contrapartida (R$):</label>
+        <label>Valor da Contrapartida (R$):</label>
         <div id="saidaNovaContrapartida" class="resultado">Aguardando...</div>
 
-        <label>Novo Percentual de Financiamento (%):</label>
+        <label>Percentual de Financiamento (%):</label>
         <div id="saidaNovoPercentualFinanciamento" class="resultado">Aguardando...</div>
         
         <label>Total do Projeto (R$):</label>
@@ -335,8 +335,8 @@
             `*Contrapartida Escolhida na Proposta:* ${formatarPercentual(parseFloat(contrapartidaEscolha))}%0A` +
             `----------------------------------%0A` +
             `*Valor Total do Projeto (Fixo):* ${totalFinal}%0A` +
-            `*Novo Valor Solicitado:* ${novoSolicitado}%0A` +
-            `*Novo Valor da Contrapartida:* ${novaContrapartida}%0A` +
+            `*Valor Solicitado:* ${novoSolicitado}%0A` +
+            `*Valor da Contrapartida:* ${novaContrapartida}%0A` +
             `*Percentual de Financiamento Efetivo:* ${percentualFinanciamentoEfetivo}`;
 
         const linkWhatsapp = `https://wa.me/?text=${mensagem}`;
