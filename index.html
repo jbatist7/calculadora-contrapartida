@@ -70,11 +70,11 @@
             font-size: 1em;
         }
         
-        /* FIX: Estilos para a Correção da Sobreposição */
+        /* Estilos para o texto da contrapartida mínima (Correção de sobreposição) */
         .minimo-texto {
             font-size: 0.8em; 
             color: #555; 
-            margin-top: 5px; /* Aumentei um pouco mais para garantir */
+            margin-top: 5px; 
             margin-bottom: 5px;
         }
         
@@ -180,7 +180,7 @@
     <div class="secao">
         <h2>1. Definição do Valor Total (Âncora)</h2>
 
-        <label for="valorBaseSolicitado">Valor Base Solicitado (R$) - (não coloque ponto):</label>
+        <label for="valorBaseSolicitado">Valor Base Solicitado (R$):</label>
         <input type="number" id="valorBaseSolicitado" placeholder="Ex: 100,00" value="100.00" oninput="calcular(true)" step="0.01">
 
         <label for="percentualFinanciamentoRegra">Percentual Máximo de Financiamento (Regra do Edital, %):</label>
@@ -193,7 +193,7 @@
     </div>
     
     <div class="secao">
-        <h2>2. Contrapartida</h2>
+        <h2>2. Ajuste Voluntário da Contrapartida</h2>
         
         <label for="contrapartidaEscolha">Contrapartida mínima exigida (<span id="percentualMinimoDisplay" style="color: #007bff;">0%</span>)</label>
         
@@ -207,19 +207,19 @@
             <input type="number" id="contrapartidaEscolha" value="" oninput="calcular(false)" step="0.01">
         </div>
         
-        <div id="mensagemErro">⚠️ A contrapartida não pode ser menor que o mínimo exigido pelo Edital.</div>
+        <div id="mensagemErro">⚠️ O percentual digitado não pode ser menor que o mínimo exigido ou igual/superior a 100%.</div>
     </div>
     
     <div class="secao">
         <h2>3. Resultado Final da Proposta</h2>
 
-        <label>Valor Solicitado (R$):</label>
+        <label>Novo Valor Solicitado (R$):</label>
         <div id="saidaNovoSolicitado" class="resultado">Aguardando...</div>
         
-        <label>Valor da Contrapartida (R$):</label>
+        <label>Novo Valor da Contrapartida (R$):</label>
         <div id="saidaNovaContrapartida" class="resultado">Aguardando...</div>
 
-        <label>Percentual de Financiamento (%):</label>
+        <label>Novo Percentual de Financiamento (%):</label>
         <div id="saidaNovoPercentualFinanciamento" class="resultado">Aguardando...</div>
         
         <label>Total do Projeto (R$):</label>
@@ -261,11 +261,12 @@
         let valorBaseSolicitado = parseFloat(valorBaseInput.value);
         let percentualRegra = parseFloat(percentualRegraInput.value);
         let contrapartidaEscolha = parseFloat(contrapartidaEscolhaInput.value);
-
-        // --- 1. Validação Básica ---
+        
+        // --- 1. Validação da Base (R$ e % Regra) ---
         if (isNaN(valorBaseSolicitado) || valorBaseSolicitado <= 0 || isNaN(percentualRegra) || percentualRegra <= 0 || percentualRegra >= 100) {
-            btnWhatsapp.disabled = true;
+            // Se a base está inválida, limpa tudo e para.
             mensagemErro.style.display = 'none';
+            btnWhatsapp.disabled = true;
             document.getElementById('saidaTotal').textContent = 'R$ 0,00';
             document.getElementById('saidaTotalFinal').textContent = 'R$ 0,00';
             document.getElementById('saidaNovoSolicitado').textContent = 'Aguardando...';
@@ -282,28 +283,45 @@
         document.getElementById('saidaTotalFinal').textContent = formatarMoeda(valorTotalFixo); 
 
 
-        // --- 3. Cálculo do Mínimo e Ajuste do Campo de Escolha ---
+        // --- 3. Cálculo do Mínimo e Reset de Base ---
         const percentualMinimo = 100 - percentualRegra;
         document.getElementById('percentualMinimoDisplay').textContent = formatarPercentual(percentualMinimo); 
         
-        if (isInputBaseChanged || isNaN(contrapartidaEscolha)) {
+        // Se a base (R$ ou % Regra) mudou, o campo de escolha DEVE ser resetado para o valor mínimo.
+        if (isInputBaseChanged) {
             contrapartidaEscolha = percentualMinimo;
             contrapartidaEscolhaInput.value = percentualMinimo.toFixed(2);
         }
+        
+        // --- 4. Lógica de Edição (Permitir Apagar sem Erro) ---
 
-        // --- 4. Validação da Escolha (Contrapartida) ---
-        if (contrapartidaEscolha < percentualMinimo || contrapartidaEscolha >= 100) {
-            mensagemErro.style.display = 'block';
+        // Se o técnico está editando/apagando o campo (o valor é NaN ou vazio)
+        if (isNaN(contrapartidaEscolha) || contrapartidaEscolhaInput.value.trim() === '') {
+            mensagemErro.style.display = 'none'; // Esconde o erro (é edição, não submissão)
+            
+            // Exibe o status de espera
+            document.getElementById('saidaNovoSolicitado').textContent = 'Aguardando digitação...';
+            document.getElementById('saidaNovaContrapartida').textContent = 'Aguardando digitação...';
+            document.getElementById('saidaNovoPercentualFinanciamento').textContent = 'Aguardando...';
             btnWhatsapp.disabled = true;
-            document.getElementById('saidaNovoSolicitado').textContent = 'ERRO - Ajuste % Contrapartida';
-            document.getElementById('saidaNovaContrapartida').textContent = 'ERRO - Ajuste % Contrapartida';
+            return; // Interrompe o cálculo
+        }
+
+        // --- 5. Validação de Erro (Valor Numérico Inválido) ---
+        
+        // Validação de erro: Só checa se é menor/maior que o mínimo/máximo, quando o valor é NUMÉRICO.
+        if (contrapartidaEscolha < percentualMinimo || contrapartidaEscolha >= 100) {
+            mensagemErro.style.display = 'block'; // Mostra o erro de valor inválido
+            btnWhatsapp.disabled = true;
+            document.getElementById('saidaNovoSolicitado').textContent = 'ERRO - Ajuste %';
+            document.getElementById('saidaNovaContrapartida').textContent = 'ERRO - Ajuste %';
             document.getElementById('saidaNovoPercentualFinanciamento').textContent = 'ERRO';
             return;
         } else {
-            mensagemErro.style.display = 'none';
+            mensagemErro.style.display = 'none'; // Esconde se o valor for válido
         }
 
-        // --- 5. Cálculo dos Novos Valores (Resultados Dinâmicos) ---
+        // --- 6. Cálculo dos Novos Valores (Continua se não houve interrupção) ---
         
         const percentualFinanciamentoEfetivo = 100 - contrapartidaEscolha;
         const percentualFinanciamentoEfetivoDecimal = percentualFinanciamentoEfetivo / 100;
@@ -311,7 +329,7 @@
         const novoValorSolicitado = valorTotalFixo * percentualFinanciamentoEfetivoDecimal;
         const novoValorContrapartida = valorTotalFixo * (contrapartidaEscolha / 100);
         
-        // --- 6. Exibição ---
+        // --- 7. Exibição ---
         document.getElementById('saidaNovoSolicitado').textContent = formatarMoeda(novoValorSolicitado);
         document.getElementById('saidaNovoPercentualFinanciamento').textContent = formatarPercentual(percentualFinanciamentoEfetivo);
         document.getElementById('saidaNovaContrapartida').textContent = formatarMoeda(novoValorContrapartida);
@@ -329,20 +347,22 @@
         const contrapartidaEscolha = document.getElementById('contrapartidaEscolha').value;
         const percentualMinimo = 100 - parseFloat(percentualRegra);
 
+        // Monta a mensagem - APENAS RESULTADOS FINAIS
         const mensagem = 
             `*PROPOSTA FINAL - Projeto de Valor Fixo*%0A%0A` +
             `*Regra Mínima do Edital:* ${formatarPercentual(percentualMinimo)} Contrapartida%0A` +
             `*Contrapartida Escolhida na Proposta:* ${formatarPercentual(parseFloat(contrapartidaEscolha))}%0A` +
             `----------------------------------%0A` +
             `*Valor Total do Projeto (Fixo):* ${totalFinal}%0A` +
-            `*Valor Solicitado:* ${novoSolicitado}%0A` +
-            `*Valor da Contrapartida:* ${novaContrapartida}%0A` +
+            `*Novo Valor Solicitado:* ${novoSolicitado}%0A` +
+            `*Novo Valor da Contrapartida:* ${novaContrapartida}%0A` +
             `*Percentual de Financiamento Efetivo:* ${percentualFinanciamentoEfetivo}`;
 
         const linkWhatsapp = `https://wa.me/?text=${mensagem}`;
         window.open(linkWhatsapp, '_blank');
     }
 
+    // Executa o cálculo inicial
     window.onload = function() {
         calcular(true); 
     };
