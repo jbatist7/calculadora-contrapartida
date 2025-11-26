@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcular Contrapartida</title>
+    <style>
+        /* 📱 Estilos para Celular (CSS Responsivo) */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px; /* Limite a largura para celular */
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+
+        /* 💡 Estilo para os placeholders (exemplo que desaparece) */
+        ::placeholder {
+            color: #aaa;
+            opacity: 1; /* Força a cor mesmo no Firefox */
+        }
+
+        /* 📊 Estilo para os campos de resultado (automático) */
+        .resultado {
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        /* 📱 Estilo para o botão de WhatsApp */
+        #btnWhatsapp {
+            background-color: #25D366;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            width: 100%;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 15px;
+            display: block; /* Garante que o botão ocupe a largura total */
+            text-align: center;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s;
+        }
+
+        #btnWhatsapp:hover {
+            background-color: #1DA851;
+        }
+
+        /* 🖋️ ESTILO NOVO: Créditos do Autor (Discreto) */
+        .creditos {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.75em; 
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Calcular Contrapartida</h1>
+    <hr>
+
+    <label for="valorSolicitado">Valor Solicitado (R$):</label>
+    <input type="number" id="valorSolicitado" placeholder="Exemplo: 100,00" oninput="calcular()" step="0.01">
+
+    <label for="percentual">Percentual da Contrapartida (%):</label>
+    <input type="number" id="percentual" placeholder="Exemplo: 10 (para 10%)" value="10" oninput="calcular()">
+
+    <hr>
+
+    <label>Valor Solicitado (R$):</label>
+    <div id="saidaSolicitado" class="resultado">Aguardando...</div>
+
+    <label>Valor da Contrapartida (R$):</label>
+    <div id="saidaContrapartida" class="resultado">Aguardando...</div>
+
+    <label>Valor Total do Projeto (R$):</label>
+    <div id="saidaTotal" class="resultado">Aguardando...</div>
+    
+    <button id="btnWhatsapp" onclick="enviarWhatsapp()" disabled>
+        Enviar Resultados para WhatsApp
+    </button>
+    
+    <div class="creditos">
+        Calculadora criada por João Batista - jbatist7@gmail.com
+    </div>
+
+</div>
+
+<script>
+    function formatarMoeda(valor) {
+        // Formata o número para padrão de moeda brasileira (R$)
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function calcular() {
+        const valorSolicitadoInput = document.getElementById('valorSolicitado');
+        const percentualInput = document.getElementById('percentual');
+        const btnWhatsapp = document.getElementById('btnWhatsapp');
+
+        // Pega os valores e converte para número
+        let valorSolicitado = parseFloat(valorSolicitadoInput.value);
+        let percentual = parseFloat(percentualInput.value);
+
+        // Habilita ou Desabilita o botão do WhatsApp
+        if (isNaN(valorSolicitado) || valorSolicitado <= 0 || isNaN(percentual) || percentual <= 0 || percentual >= 100) {
+            // Se algum valor for inválido ou zero, desabilita o botão e limpa as saídas
+            btnWhatsapp.disabled = true;
+            document.getElementById('saidaSolicitado').textContent = 'Aguardando...';
+            document.getElementById('saidaContrapartida').textContent = 'Aguardando...';
+            document.getElementById('saidaTotal').textContent = 'Aguardando...';
+            return; // Sai da função
+        }
+
+        // Garante que o percentual seja um valor entre 0 e 1, ex: 10% -> 0.1
+        let percentualDecimal = percentual / 100;
+        
+        // 1. Cálculo do Valor Total do Projeto:
+        // O valor solicitado (100) corresponde a (1 - 0.10) = 0.90 do total.
+        const valorTotal = valorSolicitado / (1 - percentualDecimal);
+
+        // 2. Cálculo da Contrapartida (10% do Valor Total):
+        const valorContrapartida = valorTotal * percentualDecimal;
+
+        // 3. Formata e exibe os resultados
+        document.getElementById('saidaSolicitado').textContent = formatarMoeda(valorSolicitado);
+        document.getElementById('saidaContrapartida').textContent = formatarMoeda(valorContrapartida);
+        document.getElementById('saidaTotal').textContent = formatarMoeda(valorTotal);
+        
+        // Se o cálculo for bem-sucedido, habilita o botão
+        btnWhatsapp.disabled = false;
+    }
+    
+    function enviarWhatsapp() {
+        // Pega os valores formatados que já estão na tela
+        const solicitado = document.getElementById('saidaSolicitado').textContent;
+        const contrapartida = document.getElementById('saidaContrapartida').textContent;
+        const total = document.getElementById('saidaTotal').textContent;
+        const percentual = document.getElementById('percentual').value;
+
+        // Monta a mensagem
+        const mensagem = 
+            `*Cálculo de Contrapartida* (Exigência: ${percentual}%)%0A%0A` +
+            `*Valor Solicitado (90%):* ${solicitado}%0A` +
+            `*Sua Contrapartida (${percentual}%):* ${contrapartida}%0A` +
+            `*Valor Total do Projeto (100%):* ${total}`;
+
+        // Cria o link do WhatsApp (URL-encoded)
+        const linkWhatsapp = `https://wa.me/?text=${mensagem}`;
+        
+        // Abre o link em uma nova janela/aba
+        window.open(linkWhatsapp, '_blank');
+    }
+
+    // Executa o cálculo inicial para preencher os campos com o exemplo "10"
+    window.onload = calcular;
+</script>
+
+</body>
+</html>
